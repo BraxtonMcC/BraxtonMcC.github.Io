@@ -5,7 +5,7 @@ website:
   title: "Braxton McCandless - Data Science Portfolio"
   favicon: Images/favicon.png
   back-to-top-navigation: true
-  repo-url: https://github.com/username/BraxtonMcC.github.Io
+  repo-url: https://github.com/BraxtonMcC/BraxtonMcC.github.Io
   #repo-actions: [issue] #if you want to allow others to report issues on your site uncomment this line
 
   page-footer: 
