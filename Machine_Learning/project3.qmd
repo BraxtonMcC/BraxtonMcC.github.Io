@@ -1,7 +1,7 @@
 ---
-title: "Client Report - [Insert Project Title]"
+title: "Client Report - Finding Relationships in Baseball"
 subtitle: "Course DS 250"
-author: "[STUDENT NAME]"
+author: "Braxton McCandless"
 format:
   html:
     self-contained: true
@@ -25,4 +25,272 @@ execute:
     
 ---
 
-### Paste in a template
+---
+
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd 
+import numpy as np
+import sqlite3
+from lets_plot import *
+LetsPlot.setup_html()
+
+```
+
+
+## Elevator pitch
+
+_In analyzing all the baseball data, we were able to gain a few valuable key insights. First, we analyzed all the players that had BYU-Idaho listed as their college. We looked at what team they played for, what year they played for the team, and how much their salary was. Next, we identified and raked players batting averages using three different parameters. We found that as we include more data over years of players careers, we can get closer to the true batting average. Lastly, we compared two teams, the Los Angeles Dodgers and the New York Yankees, total wins from 1985 to the latest year of the data. We observed that the New York Yankees had a higher frequency of wins than the Los Angeles Dodgers._
+
+
+```{python}
+#| label: project-data
+#| code-summary: Read and format project data
+
+sqlite_file = 'lahmansbaseballdb.sqlite'
+con = sqlite3.connect(sqlite_file)
+```
+
+
+
+## QUESTION|TASK 1
+
+__Write an SQL query to create a new dataframe about baseball players who attended BYU-Idaho. The new table should contain five columns: playerID, schoolID, salary, and the yearID/teamID associated with each salary. Order the table by salary (highest to lowest) and print out the table in your report.__
+
+_The table displays the highest salaries reported by the players that came from BYU-Idaho. Matt Lindstrom (Lindsma01) had the most success out of all the baseball players that went to school in BYU-Idaho. Matt Lindstrom’s highest paid year on record was with the Chicago White Sox in 2014. Matt had a salary with the White Sox of $4 million._
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd 
+import numpy as np
+import sqlite3
+
+```
+
+
+```{python}
+#| label: Q1-chart
+#| code-summary: BYU-Idaho Players Salaries
+#| fig-cap: "BYU-Idaho Players Salaries"
+#| fig-align: center
+# Include and execute your code here
+q_1 = """
+select distinct p.playerID, c.schoolID, printf('$%,.0f',s.salary) as 'Salary', s.yearID, s.teamID
+from collegeplaying c
+join Salaries s on c.playerID = s.playerID
+join People p on c.playerID = p.playerID
+where c.schoolID = 'idbyuid'
+order by s.salary desc
+limit 10
+"""
+salary_df = pd.read_sql_query(q_1,con)
+display(salary_df)
+```
+
+
+## QUESTION|TASK 2
+
+__This three-part question requires you to calculate batting average (number of hits divided by the number of at-bats)__
+
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd 
+import numpy as np
+import sqlite3
+```
+
+__Part 1: Write an SQL query that provides playerID, yearID, and batting average for players with at least 1 at bat that year. Sort the table from highest batting average to lowest, and then by playerid alphabetically. Show the top 5 results in your report.__
+
+_From part one we can see that when we include all those players who had at least at bat for the year their batting average for the year was perfect. All the top 5 players from part one had a batting average of 100%._
+
+```{python}
+#| label: Q2 Part 1
+#| code-summary: Batting average
+#| fig-cap: "Top 5 Batting Averages"
+#| fig-align: center
+
+# Include and execute your code here
+q2_1 = """
+select playerID, yearID, (h*1.0)/ab as 'BA'
+from batting
+where ab >= 1
+order by (h*1.0)/ab desc, playerID asc
+limit 5
+"""
+ba_part_1 = pd.read_sql_query(q2_1,con)
+display(ba_part_1)
+```
+
+__Part 2: Use the same query as above, but only include players with at least 10 at bats that year. Print the top 5 results.__
+
+_For part two we start to whittle down the results, instead of players with at least one at bat we increase the threshold to at least 10 at bats. Now, our best batting average was only 64% instead of players have a 100% batting average._
+
+```{python}
+#| label: Q2 Part 2
+#| code-summary: Batting average
+#| fig-cap: "Top 5 Batting Averages"
+#| fig-align: center
+
+# Include and execute your code here
+q2_2 = """
+select playerID, yearID, (h*1.0)/ab as 'BA'
+from batting
+where ab >= 10
+order by (h*1.0)/ab desc, playerID
+limit 5
+"""
+ba_part_2 = pd.read_sql_query(q2_2,con)
+display(ba_part_2)
+```
+
+
+__Part 3: Now calculate the batting average for players over their entire careers (all years combined). Only include players with at least 100 at bats, and print the top 5 results.__
+
+_For part three we whittled down even further by obtaining players lifetime batting average across all the years they played. The highest player had a batting average of only 35.8%. Following the progression of the parameters. When we widen the number of at bats and hits, it becomes clear that the best players do not always have a 100% batting average like we saw in part one_
+
+```{python}
+#| label: Q2 Part 3
+#| code-summary: Batting average
+#| fig-cap: "Top 5 Batting Averages"
+#| fig-align: center
+
+# Include and execute your code here
+q2_3 = """
+select playerID, sum(h*1.0)/sum(ab) as 'BA'
+from batting
+where ab >= 100
+group by playerID
+order by (h*1.0)/ab desc, playerID
+limit 5
+"""
+ba_part_3 = pd.read_sql_query(q2_3,con)
+display(ba_part_3)
+```
+
+
+
+## QUESTION|TASK 3
+
+__Pick any two baseball teams and compare them using a metric of your choice (average salary, home runs, number of wins, etc). Write an SQL query to get the data you need, then make a graph using Lets-Plot to visualize the comparison. What do you learn?__
+
+_I chose to use total wins for each year to compare the Los Angeles Dodgers (LAN) to the total wins for the New York Yankees (NYA). I chose this measure to compare the teams because I feel as though looking at the wins of the two teams gives a great overall comparison of the success of the team. In examining the data and graph I concluded that the New York Yankees had successful year more frequently than the Los Angeles Dodgers. Both teams had their good years and bad years. Overall, the New York Yankees won more frequently than the Los Angeles Dodgers._
+
+```{python}
+#| label: Q3
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd 
+import numpy as np
+import sqlite3
+from lets_plot import *
+LetsPlot.setup_html()
+
+```
+
+
+
+```{python}
+#| label: Q3-data
+#| code-summary: Table of team wins
+#| fig-cap: "Wins by Team"
+#| fig-align: center
+# Include and execute your code here
+
+q_3 = """
+select teamID, yearID, sum(w) as 'Total_Wins'
+from Teams
+where teamID in ('NYA', 'LAN') and yearID >= 1985
+group by teamID, yearID
+order by yearID asc
+"""
+
+wins_df = pd.read_sql_query(q_3,con)
+wins_df.tail(14)
+```
+
+
+```{python}
+#| label: Q3-graph
+#| code-summary: Graph of wins
+#| tbl-cap: "Wins by Team"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+(ggplot(wins_df, aes(x='yearID', y='Total_Wins', color='teamID')) + geom_line() + ggtitle('Total Wins by Team') + xlab('Year') + ylab('Total Wins') + scale_x_continuous(format='d') + theme(plot_title=element_text(hjust=0.5))
+)
+
+```
+
+
+## QUESTION|TASK(STRETCH) 4
+
+__Advanced Salary Distribution by Position__
+
+_From this we can see that the on average the highest paid position is "Designated Hitter". While this position has the highest average salary, when we look at the higest (max) salary for each position we find that "Third Baseman" and "Pitcher" are tied for the higest salary at $33 million. All positions are categorized as “High Salary”._
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd 
+import numpy as np
+import sqlite3
+
+```
+
+```{python}
+#| label: Q4-table
+#| code-summary: Average salary by position
+#| fig-cap: "Average Salary by Position"
+#| fig-align: center
+# Include and execute your code here
+
+q_4 = """
+select 
+  p.position, printf('$%,.0f',avg(s.salary)) as 'Average_Salary', count(distinct s.playerID) as 'Total_Players',
+  coalesce(printf('$%,.0f',max(s.salary)), 'N/A') as 'Highest_Salary',
+  case 
+    when avg(s.salary) > 1000000 then 'High Salary'
+    when avg(s.salary) between 5000000 and 1000000 then 'Medium salary'
+    else 'Low Salary'
+  end as salary_category
+from Salaries s
+join appearances a on s.playerID = a.playerID
+join(
+  select playerID, max(position) as position
+  from (
+    select playerID,
+      case
+        when G_p > 0 then 'Pitcher'
+        when G_c > 0 then 'Catcher'
+        when G_1b > 0 then 'First Baseman'
+        when G_2b > 0 then 'Second Baseman'
+        when G_3b > 0 then 'Third Baseman'
+        when G_ss > 0 then 'Shortstop'
+        when G_lf > 0 then 'Left Fielder'
+        when G_cf > 0 then 'Center Fielder'
+        when G_rf > 0 then 'Right Fielder'
+        when G_of > 0 then 'Outfielder'
+        when G_dh > 0 then 'Designated Hitter'
+        when G_ph > 0 then 'Pinch Hitter'
+        when G_pr > 0 then 'Pinch Runner'
+        
+      end as position
+    from appearances
+  )
+  group by playerID
+) p on s.playerID = p.playerID
+group by p.position
+order by avg(s.salary) desc
+limit 10
+"""
+
+salary_df = pd.read_sql_query(q_4,con)
+display(salary_df)
+```

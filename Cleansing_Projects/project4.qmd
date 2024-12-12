@@ -1,7 +1,7 @@
 ---
-title: "Client Report - [Insert Project Title]"
+title: "Client Report - Can You Predict That?"
 subtitle: "Course DS 250"
-author: "[STUDENT NAME]"
+author: "Braxton McCandless"
 format:
   html:
     self-contained: true
@@ -25,4 +25,351 @@ execute:
     
 ---
 
-### Paste in a template
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd
+import numpy as np
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+```
+
+
+## Elevator pitch
+
+_Using the power of advanced machine learning, we developed a model that successfully predicted whether a home was built before or after 1980. Through model tuning we were able to get the accuracy of our model’s prediction at the 90% threshold making our model relatively reliable in predicting the year a home was built. We first Identified possible relationships between homes built before and after 1980. Our model found that one story architecture, garage type, and quality ratings of C were most correlated with homes from built before 1980. Our model was then explained and justified using a classification report, confusion matrix and an ROC curve confirming that our model was accurate and reliable. I also built a model to predict the year a home was built using the “GradientBoostingRegressor.” This model was able to successfully predict 89% of its results. For Justification we look at Mean Absolute Error (MAE), Mean Squared Error (MSE), R-Squared value, and a confusion matrix. _
+
+
+```{python}
+#| label: project-data
+#| code-summary: Read and format project data
+# Include and execute your code here
+
+dwellings_ml = pd.read_csv('https://github.com/byuidatascience/data4dwellings/raw/master/data-raw/dwellings_ml/dwellings_ml.csv')
+```
+
+
+
+## QUESTION|TASK 1
+
+__Create 2-3 charts that evaluate potential relationships between the home variables and before1980. Explain what you learn from the charts that could help a machine learning algorithm.__
+
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np 
+from lets_plot import * 
+LetsPlot.setup_html(isolated_frame=True)
+
+df_subset = dwellings_ml.filter(
+    ['livearea', 'finbsmnt', 'basement', 
+    'yearbuilt', 'nocars', 'numbdrm', 'numbaths', 'before1980',
+    'stories', 'yrbuilt']).sample(500)
+
+df_subset = df_subset.dropna(subset=['livearea', 'finbsmnt', 'before1980', 'basement', 'numbaths', 'numbdrm'])
+
+df_subset['before1980'] = df_subset['before1980'].astype(bool)
+
+
+```
+
+_This scatter plot shows us the possible relationship between the number of bedrooms built in the house and the total living space, or square footage, of the home. There seems to be a linear relationship between house size and number of rooms built. As the number of rooms increase, so does the total livable square footage._
+
+```{python}
+#| label: Q1-Point
+#| code-summary: Living Area vs Number of Bedrooms
+#| fig-cap: "Living Area vs Number of Bedrooms"
+#| fig-align: center
+# Include and execute your code here
+c_1 = ggplot(df_subset, aes(x='livearea', y='numbdrm', color='before1980')) + geom_point(alpha=0.5) + ggtitle("Living Area vs Number of Bedrooms") + xlab("Living Area") + ylab("Number of Bedrooms") + scale_color_manual(name='Built Before 1980', labels=['Yes (Blue)', 'No (Red)'], values=['blue', 'red']) + theme(legend_position='right') 
+
+c_1.show()
+```
+
+_This box and whisker plot shows is the relationship between basement sizes on homes built before 1980 and after 1980. From this we can see that homes that were built before 1980 had slightly larger mean basement size than homes built after 1980._
+
+```{python}
+#| label: Q1-Boxplot
+#| code-summary: Finished Basement Area by Before1980
+#| tbl-cap: "Finished Basement Area by Before1980"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+c_2 = ggplot(df_subset, aes(x='before1980', y='finbsmnt', fill='before1980')) + geom_boxplot() + ggtitle('Finished Basement Area by Before1980') + xlab('Built Before 1980') + ylab('Finished Basement Area') + scale_fill_discrete(name="Built Before 1980")
+c_2.show()
+```
+
+_This stacked bar chart tells us the relationship between the number of bathrooms built in a house based on if the house was built before or after 1980. It looks like the majority of houses built before 1980 had two bathrooms. _
+
+```{python}
+#| label: Q1-Bar
+#| code-summary: Number of Bathrooms by Before1980
+#| tbl-cap: "Number of Bathrooms by Before1980"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+c_3 = ggplot(df_subset, aes(x='numbaths', fill='before1980')) + geom_bar(position='stack') + ggtitle('Number of Bathrooms by Before1980') + xlab('Number of Bathrooms') + ylab('Count') + scale_fill_discrete(name="Built Before 1980")
+c_3.show()
+
+```
+
+
+## QUESTION|TASK 2
+
+__Build a classification model labeling houses as being built “before 1980” or “during or after 1980”. Your goal is to reach or exceed 90% accuracy. Explain your final model choice (algorithm, tuning parameters, etc) and describe what other models you tried.__
+
+_I ended up using the DecisionTreeClassifier to create my classification model. I settled on this because this led to me getting the highest accuracy in the quickest time. I tried to use the Gradient Boosting, but it ended up taking longer to get the results. I also tried to add the following parameters: max_depth, min_sample_split, and min_samples_leaf. I found that this took a lot longer to get the results and it did not improve the accuracy rating at all when compared to the DecisionTreeClassifier with no parameters. I was able to achieve a 90% accuracy rating._
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+# Include and execute your code here
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn import metrics
+
+```
+
+
+```{python}
+#| label: Q2-chart
+#| code-summary: Classification Report
+#| fig-cap: "Accuracy and Classification Report"
+#| fig-align: center
+
+X = dwellings_ml.drop(dwellings_ml.filter(regex = 'before1980|yrbuilt|parcel').columns, axis = 1)
+y = dwellings_ml.filter(regex = "before1980")
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = .35, random_state = 76)
+
+model_1 = tree.DecisionTreeClassifier(random_state=76, max_depth=10, min_samples_split=10, min_samples_leaf=2)
+model_1.fit(X_train, y_train)
+
+y_pred = model_1.predict(X_test)
+
+print('\nTest Accuracy:', metrics.accuracy_score(y_test, y_pred))
+print('\nClassification Report: \n', metrics.classification_report(y_test, y_pred))
+
+```
+
+
+
+## QUESTION|TASK 3
+
+__Justify your classification model by discussing the most important features selected by your model. This discussion should include a feature importance chart and a description of the features.__
+
+_The most important features identified in my model were "arcstyle_ONE_STORY", "gartype_Att", and "quality_C." The model puts the most importance on how many stories the house is using "arcstyle_ONE_STORY." One story homes were more popular before 1980 so there were more built of these types of homes. The second most important feature my model used was whether or not the house had an attached, or detached garage, "gartype_Att." Most of the houses built before 1980 had detached garages. The third greatest importance the model used was the quality of the home from "quality_C." Homes with this quality rating were more likely to be older homes. The model put these three fields together to best predict if the house was built before or after 1980._
+
+```{python}
+#| label: Q3
+#| code-summary: Read and format data
+# Include and execute your code here
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn import metrics
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+
+```
+
+
+```{python}
+#| label: Q3-chart
+#| code-summary: Feature Importance Chart
+#| fig-cap: "Feature Importance"
+#| fig-align: center
+# Include and execute your code here
+importance = model_1.feature_importances_
+feature_names = X.columns
+
+feature_importance_df = pd.DataFrame({'feature': feature_names, 'Importance': importance})
+feature_importance_df = feature_importance_df.sort_values('Importance', ascending=False)
+
+feature_importance_df_top = feature_importance_df.head(10)
+
+c_4 = ggplot(feature_importance_df_top, aes(x='feature', y='Importance', fill= 'Importance')) + geom_bar(stat='identity') + theme(axis_text_x=element_text(angle=90, hjust=1)) + ggtitle('Feature Importance') + xlab('Feature') + ylab('Importance')
+c_4.show()
+
+```
+
+
+
+## QUESTION|TASK 4
+
+__Describe the quality of your classification model using 2-3 different evaluation metrics. You also need to explain how to interpret each of the evaluation metrics you use.__
+
+_To justify the results and quality of my model, I chose to look at the following three metrics: 1 - Classification report containing the accuracy, 2 - Confusion matrix, and 3 - The Receiver-operating characteristic (ROC) curve. Based on the results of this test, I can conclude that the quality of my model is strong and can be relied upon with an acceptable accuracy and true positive rate. Under each of the reports I will explain the significance and how to interpret the results._
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+# Include and execute your code here
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn import metrics
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+
+```
+
+
+```{python}
+#| label: Q4-Ratings
+#| code-summary: Performance Metrics
+#| fig-cap: "Accuracy and Classification Report"
+#| fig-align: center
+# Include and execute your code here
+print('\nTest Accuracy:', metrics.accuracy_score(y_test, y_pred))
+print('\nClassification Report: \n', metrics.classification_report(y_test, y_pred))
+```
+
+_The classification report and accuracy measure the percentage of correctly classified predictions compared to the total results. The higher the accuracy percentage is the more accurate the model is. A high accuracy rating is anything greater than or equal to 90% (0.90). The precision measures the percentage of total correct guesses divided by the number of true positives + false positives. For “0” this means that 86% of the home predicted to be built after 1980 are correct, and for the “1” 96% of the homes predicted to be built before 1980 are correct. Recall measures the total true positives divided by true positives + false negatives. For “0”, the model correctly identified 87% of the homes built after 1980 and for “1” correctly identified 92% of the homes built before 1980. The F-1 Score is calculated as 2 * (Precision * Recall / Precision + Recall). The F-1 score provides a balanced metric to look at our model performance. Our model is slightly stronger at predicting if a home was built before 1980 than after 1980 but overall reliable at predicting if it was built before or after 1980._
+
+
+```{python}
+#| label: Q4-Matrix
+#| code-summary: Confusion Matrix
+#| tbl-cap: "Confusion Matrix"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+conf_matrix = metrics.confusion_matrix(y_test, y_pred)
+conf_matrix_df = pd.DataFrame(conf_matrix, columns=['Predicted: (After 1980)', 'Predicted: (Before 1980)'], index=['Actual: (After 1980)', 'Actual: (Before 1980)'])
+
+conf_matrix_plot = ggplot(conf_matrix_df.reset_index().melt(id_vars='index'), aes(x='index', y='variable', fill='value')) + geom_tile() + geom_text(aes(label='value'), color='black', size=6) + scale_fill_brewer(palette='RdYlBu') + ggtitle('Confusion Matrix') + xlab('Predicted') + ylab('Actual')
+
+conf_matrix_plot.show()
+
+```
+
+_The confusion matrix is a table that is used to describe the performance of a classification model. The matrix shows the number of true positives (4630), false positives (386), true negatives (2594), and false negatives (410). From the confusion matrix we can see that our model had relatively few false positives / negatives in relation to the correct predictions. This proves how well my model was at predicting if a home was built before or after 1980._
+
+```{python}
+#| label: Q4-ROC
+#| code-summary: ROC Curve
+#| tbl-cap: "ROC Curve"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+fpr, tpr, thresholds = metrics.roc_curve(y_test, y_pred)
+roc_auc = metrics.auc(fpr, tpr)
+
+roc_df = pd.DataFrame({'FPR': fpr, 'TPR': tpr, 'Thresholds': thresholds})
+
+roc_chart = ggplot(roc_df, aes(x='FPR', y='TPR')) + geom_line(color='blue') + ggtitle('ROC Curve') + xlab('False Positive Rate') + ylab('True Positive Rate')
+
+roc_chart.show()
+
+```
+
+_The ROC curve is a graphical representation of the true positive rate against the false positive rate. The closer the curve is to the top left corner, the better the model is. The area under the curve (AUC) is used to measure the performance of the model. The higher the AUC, the better the model is. Our model had an AUC of 0.92 which shows us it performed very well at predicting when a house was built._
+
+
+
+## STRETCH|TASK 5
+
+
+__Can you build a model that predicts the year a house was built? Explain the model and the evaluation metrics you would use to determine if the model is good.__
+
+_For the model I chose to use the “GradientBoostingRegressor” because of its ability to sift through complex, non-linear relationships to get to the target prediction. In this case our goal was to predict what year a house was built which requires the model to look through the data and attempt to find patterns that could help predict when a house was built. The “GradientBoostingRegressor” is also very good at not over filtering the data like other models. This model type also very flexible and forgiving when it comes to tuning the model. Below are the figures and print outs I used to evaluate the accuracy of my model._
+
+
+```{python}
+#| label: Q5
+#| code-summary: Read and format data
+# Include and execute your code here
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn import metrics
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+
+```
+
+```{python}
+#| label: Q5-Ratings
+#| code-summary: Read and format data
+# Include and execute your code here
+
+X_5 = dwellings_ml.drop(dwellings_ml.filter(regex = 'yrbuilt|parcel').columns, axis = 1)
+y_5 = dwellings_ml["yrbuilt"]
+
+X_5 = X_5.dropna()
+y_5 = y_5[X_5.index]
+
+X_train, X_test, y5_train, y5_test = train_test_split(X_5, y_5, test_size = .35, random_state = 76)
+
+rf_model = GradientBoostingRegressor(random_state=76, n_estimators=500, learning_rate=0.1, max_depth=15, min_samples_split=10, min_samples_leaf=2)
+rf_model.fit(X_train, y5_train)
+
+y5_pred = rf_model.predict(X_test)
+
+mae = metrics.mean_absolute_error(y5_test, y5_pred)
+mse = metrics.mean_squared_error(y5_test, y5_pred)
+r2 = metrics.r2_score(y5_test, y5_pred)
+
+print(f'Mean Absolute Error (MAE): {mae:.2f}')
+print(f'Mean Squared Error (MSE): {mse:.2f}')
+print(f'R-Squared (R^2): {r2:.2f}')
+
+```
+
+
+```{python}
+#| label: Q5-Classification Report
+#| code-summary: Classification Report
+#| fig-cap: "Accuracy and Classification Report"
+#| fig-align: center
+# Include and execute your code here
+
+bins = [0, 1980, 1995, 2010, 2023]
+lables = ['Pre 1980', '1980-1995', '1996-2010', 'Post 2010']
+
+y5_test_bins = pd.cut(y5_test, bins=bins, labels=lables)
+y5_pred_bins = pd.cut(y5_pred, bins=bins, labels=lables)
+
+print('\nTest Accuracy:', metrics.accuracy_score(y5_test_bins, y5_pred_bins))
+print('\nClassification Report: \n', metrics.classification_report(y5_test_bins, y5_pred_bins))
+```
+
+_The Mean Absolute Error (MAE) tells us that on average, our model’s predictions are off by only 7.5 years. With regression tasks like this a MAE of 10 years is typically considered very good. The Mean Squared Error (MSE) is similar to the MAE, but the MSE penalizes the model’s larger errors heavier than smaller errors. Our score of 156.62 equates to about 12.5 years of difference with a range of years that spans over 100 years. When we compare our R-Squared result with the Accuracy test below we can see that overall, our model is right within the acceptable margin of error._
+
+```{python}
+#| label: Q5-Confusion
+#| code-summary: Confusion Matrix
+#| fig-cap: "Confusion Matrix"
+#| fig-align: center
+# Include and execute your code here
+
+conf5_matrix = metrics.confusion_matrix(y5_test_bins, y5_pred_bins, labels=lables)
+conf5_matrix_df = pd.DataFrame(conf5_matrix, columns=['Pred:(Pre 80)', 'Pred:(80-95)', 'Pred:(96-10)', 'Pred:(Post 10)'], index=['Actl:(Pre 80)', 'Actl:(80-95)', 'Actl:(96-10)', 'Actl:(Post 10)'])
+
+conf5_matrix_norm = conf5_matrix.astype('float') / conf5_matrix.sum(axis=1)[:, np.newaxis]
+
+conf5_matrix_norm_df = pd.DataFrame(conf5_matrix_norm, columns=['Pred:(Pre 80)', 'Pred:(80-95)', 'Pred:(96-10)', 'Pred:(Post 10)'], index=['Actl:(Pre 80)', 'Actl:(80-95)', 'Actl:(96-10)', 'Actl:(Post 10)'])
+
+conf5_matrix_norm_df_melted = conf5_matrix_norm_df.reset_index().melt(id_vars='index', var_name='Predicted', value_name='Accuracy')
+
+lbl_plot = (
+  pd.DataFrame(100 * conf5_matrix_norm)
+  .stack()
+  .reset_index(drop=True)
+  .round(1)
+  .astype(str) + '%'
+)
+
+conf5_matrix_plot = ggplot(conf5_matrix_norm_df_melted, aes(x='Predicted', y='index', fill='Accuracy')) + geom_tile() + geom_text(aes(label=lbl_plot), color='white', size=6) + scale_fill_gradient(low='red', high='blue', name='Accuracy') + ggtitle('Confusion Matrix') + xlab('Predicted') + ylab('Actual') + theme(axis_text_x=element_text(angle=90, hjust=1))
+
+conf5_matrix_plot.show()
+
+```
+
+_The confusion matrix is a table that is used to describe the performance of a classification model. The matrix shows the number of true positives, false positives, true negatives, and false negatives. From the confusion matrix we can see that our model had relatively few false positives / negatives in relation to the correct predictions. This proves how well my model was at predicting when a house was built._

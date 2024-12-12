@@ -1,7 +1,7 @@
 ---
-title: "Client Report - [Insert Project Title]"
+title: "Client Report - The War with Star Wars"
 subtitle: "Course DS 250"
-author: "[STUDENT NAME]"
+author: "Braxton McCanldess"
 format:
   html:
     self-contained: true
@@ -25,4 +25,435 @@ execute:
     
 ---
 
-### Paste in a template
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd
+import numpy as np
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+```
+
+
+## Elevator pitch
+
+_After cleansing the Star Wars survey data for better handling. The cleaning consisted of shorting column names, handling missing values, and flited the raw data to extract the correct and useable survey responses. I then successfully recreated two of the visuals featured on the article provided to validate our cleaned data. The visual output and measurements were identical to those of the article. After this we then used the cleaned data to create a machine learning model to predict if someone makes over $50,000 a year based on their survey responses. Our final model was 65% accurate at predicting if a participant makes over $50k a year. To provide extra validation we then successfully recreated one more visual from the article._
+
+```{python}
+#| label: project-data
+#| code-summary: Read and format project data
+url = 'https://github.com/fivethirtyeight/data/raw/master/star-wars-survey/StarWars.csv'
+
+df_cols = pd.read_csv(url, encoding = "ISO-8859-1", nrows = 1).melt()
+df = pd.read_csv(url, encoding = "ISO-8859-1", skiprows =2, header = None )
+```
+
+
+## QUESTION|TASK 1
+
+__Shorten the column names and clean them up for easier use with pandas. Provide a table or list that exemplifies how you fixed the names.__
+
+_The column names were long and very difficult to work with what we wanted to accomplish in this product. I cleaned up some of the data and shorted the column names to a more unified method. The new column names can be seen below._
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np
+
+```
+
+
+```{python}
+#| label: Q1-clean
+#| code-summary: Table of column names
+#| fig-cap: "Column Names"
+#| fig-align: center
+# Include and execute your code here
+
+var_replace = {
+    'Which of the following Star Wars films have you seen\\? Please select all that apply\\.':'seen',
+    'Please rank the Star Wars films in order of preference with 1 being your favorite film in the franchise and 6 being your least favorite film.':'rank',
+    'Please state whether you view the following characters favorably, unfavorably, or are unfamiliar with him/her.':'view',
+    'Do you consider yourself to be a fan of the Star Trek franchise\\?':'star_trek_fan',
+    'Do you consider yourself to be a fan of the Expanded Universe\\?\x8cæ':'expanded_fan',
+    'Are you familiar with the Expanded Universe\\?':'know_expanded',
+    'Have you seen any of the 6 films in the Star Wars franchise\\?':'seen_any',
+    'Do you consider yourself to be a fan of the Star Wars film franchise\\?':'star_wars_fans',
+    'Which character shot first\\?':'shot_first',
+    'Unnamed: \d{1,2}':np.nan,
+    ' ':'_',
+}
+
+val_replace = {
+    'Response':'',
+    'Star Wars: Episode ':'',
+    ' ':'_'
+}
+
+df_cols_new = (df_cols
+    .assign(
+        val_replace = lambda x:  x.value.str.strip().replace(val_replace, regex=True),
+        var_replace = lambda x: x.variable.str.strip().replace(var_replace, regex=True)
+    )
+    .fillna(method = 'ffill')
+    .fillna(value = "")
+    .assign(column_names = lambda x: x.var_replace.str.cat(x.val_replace, sep = "_").str.strip('__').str.lower())
+    )
+
+df.columns = df_cols_new.column_names.to_list()
+
+df.columns
+
+```
+
+_Below is an example of what the column names were before and what I changed them to. The “variable” column represents what the original column name was. The “value” column original values in response to the question for the column. The “val_replace” and “var_replace” columns represent the cleaned values and variables used to replace the older, harder to use data and names. The last column “column_names” represents the cleaned and shortened column names we used for easier computer handling._
+
+```{python}
+#| label: Q1-table
+#| code-summary: Table of column names
+#| tbl-cap: "Column Names"
+#| tbl-cap-location: top
+# Include and execute your code here
+df_cols_new.head()
+
+```
+
+
+## QUESTION|TASK 2
+
+__Clean and format the data so that it can be used in a machine learning model. As you format the data, you should complete each item listed below. In your final report provide example(s) of the reformatted data with a short description of the changes made.__
+
+_In order to properly work with machine learning, we have to do some more data cleaning. The following output and data represents the steps I tool to clean the data._
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np
+
+```
+
+
+_A. Filter the dataset to respondents that have seen at least one film. I also altered this code to filter out any responses that said they had seen any Star Wars movie but did not mark what movies they had seen._
+```{python}
+#| label: Q2-A
+#| code-summary: Filter data
+#| fig-cap: "Seen Any Star Wars Movie"
+#| fig-align: center
+# Include and execute your code here
+
+seen_columns = [
+    'seen_i__the_phantom_menace',
+    'seen_ii__attack_of_the_clones',
+    'seen_iii__revenge_of_the_sith',
+    'seen_iv__a_new_hope',
+    'seen_v_the_empire_strikes_back',
+    'seen_vi_return_of_the_jedi',
+]
+
+df_filtered = df[df['seen_any'] == 'Yes']
+
+for col in seen_columns:
+    df_filtered[col] = df_filtered[col].notna()
+
+df_filtered.head()
+
+```
+
+_B. Create a new column that converts the age ranges to a single number. Drop the age range categorical column_
+```{python}
+#| label: Q2-B
+#| code-summary: Change Age Field
+#| tbl-cap: "Age Field"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+age_map = {
+    '18-29': 24,
+    '30-44': 37,
+    '45-60': 52,
+    '>60': 65
+}
+
+df_filtered['age_num'] = df_filtered['age'].map(age_map)
+df_filtered.drop('age', axis=1, inplace = True)
+
+df_filtered.head()
+
+```
+
+_C. Create a new column that converts the education groupings to a single number. Drop the school categorical column_
+```{python}
+#| label: Q2-C
+#| code-summary: Filter data
+#| fig-cap: "Education Field"
+#| fig-align: center
+# Include and execute your code here
+
+education_map = {
+  'Less than high school degree': 9,
+  'High school degree': 12,
+  'Some college or Associate degree': 14,
+  'Bachelor degree': 16,
+  'Graduate degree': 20
+}
+
+df_filtered['education_num'] = df_filtered['education'].map(education_map)
+df_filtered.drop('education', axis=1, inplace = True)
+
+df_filtered.head()
+
+```
+
+_D. Create a new column that converts the income ranges to a single number. Drop the income range categorical column_
+```{python}
+#| label: Q2-D
+#| code-summary: Filter data
+#| fig-cap: "Income Field"
+#| fig-align: center
+# Include and execute your code here
+
+df_filtered['household_income'] = df_filtered['household_income'].fillna('unknown')
+
+income_map = {
+  '$0 - $24,999': 12500,
+  '$25,000 - $49,999': 37500,
+  '$50,000 - $99,999': 75000,
+  '$100,000 - $149,999': 125000,
+  '$150,000+': 150000,
+  'unknown': 0
+}
+
+df_filtered['income_num'] = df_filtered['household_income'].map(income_map)
+df_filtered.drop('household_income', axis=1, inplace = True)
+
+df_filtered.head()
+```
+
+_E. Create your target (also known as “y” or “label”) column based on the new income range column_
+```{python}
+#| label: Q2-E
+#| code-summary: Filter data
+#| fig-cap: "Income Over 50k"
+#| fig-align: center
+# Include and execute your code here
+
+df_filtered['income_over_50k'] = (df_filtered['income_num'] > 50000).astype(int)
+
+df_filtered.head()
+
+
+```
+
+_F. One-hot encode all remaining categorical columns_
+```{python}
+#| label: Q2-F
+#| code-summary: Filter data
+#| fig-cap: "One-hot encoding"
+#| fig-align: center
+# Include and execute your code here
+
+df_encoded = pd.get_dummies(df_filtered, drop_first=True)
+
+df_encoded.head()
+
+```
+
+
+## QUESTION|TASK 3
+
+__Validate that the data provided on GitHub lines up with the article by recreating 2 of the visuals from the article__
+
+_I recreated the following visuals from the article to validate our data clensing: 1. "Which 'Star Wars' Movies Have You Seen?" and 2. "Who Shot First?"_
+
+```{python}
+#| label: Q3
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+
+```
+
+
+```{python}
+#| label: Q3-chart1
+#| code-summary: Which Star Wars Movies Have You Seen?
+#| fig-cap: "Which Star Wars Movies Have You Seen?"
+#| fig-align: center
+# Include and execute your code here
+
+seen_columns = [
+    'seen_i__the_phantom_menace',
+    'seen_ii__attack_of_the_clones',
+    'seen_iii__revenge_of_the_sith',
+    'seen_iv__a_new_hope',
+    'seen_v_the_empire_strikes_back',
+    'seen_vi_return_of_the_jedi',
+]
+
+movie_titles = [
+    "The Phantom Menace",
+    "Attack of the Clones",
+    "Revenge of the Sith",
+    "A New Hope",
+    "The Empire Strikes Back",
+    "Return of the Jedi",
+]
+
+good_resp = df_filtered[seen_columns].sum(axis=1) > 0
+
+total_seen_any = good_resp.sum()
+prob_seen = [(df_filtered[col].sum() / total_seen_any) for col in seen_columns]
+
+
+df_seen = pd.DataFrame({
+  'movie': movie_titles,
+  'probability': prob_seen
+})
+
+p = (ggplot(df_seen, aes(x='movie', y='probability')) + geom_bar(stat='identity', fill='blue') + labs(title='Which Star Wars Movies Have You Seen?', subtitle='Percentage of respondents who have seen each film', x='Percentage of Respondents', y='Star Wars Movies') + theme(axis_text_x=element_text(angle=45, hjust=1)))
+
+p.show()
+
+```
+
+
+```{python}
+#| label: Q3-chart2
+#| code-summary: Who Shot First?
+#| tbl-cap: "Who Shot First?"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+shot_first_counts = df_filtered['shot_first'].value_counts()
+
+shot_first_percent = (shot_first_counts / shot_first_counts.sum()) * 100
+
+df_shot_first = pd.DataFrame({
+  'response': shot_first_percent.index,
+  'percentage': shot_first_percent.values
+})
+
+df_shot_first['response'] = df_shot_first['response'].replace({"I don't understand this question": "Don't Understand"})
+df_shot_first['response'] = pd.Categorical(df_shot_first['response'], categories=['Don\'t Understand', 'Greedo', 'Han'], ordered=True)
+df_shot_first['percent_label'] = df_shot_first['percentage'].round(0).astype(int).astype(str) + '%'
+
+
+p2 = (ggplot(df_shot_first, aes(x='response', y='percentage')) + geom_bar(stat='identity', fill='blue') + geom_text(aes(label='percent_label'), nudge_y=2, size=10) + labs(title='Who Shot First?', subtitle='According to 834 respondents', x='Response', y='Percentage') + coord_flip() + theme(axis_text_x=element_text(hjust=1)))
+
+p2.show()
+```
+
+
+## QUESTION|TASK 4
+
+__Build a machine learning model that predicts whether a person makes more than $50k. Describe your model and report the accuracy.__
+
+_For my model, I chose to use all the columns in the DataFrame except any of the columns that would directly give up the answer (e.g. household_income, income_num, location, and income_over_50k). After I filtered out any undesirable data, I split the data into training and testing sets, and trained the model to make predictions on if a person makes more or less than $50k a year. I then ran a accuracy score and classification report to display how successful my model was. The accuracy of my model 0.655 using the “RandomForestClassifier”. This means that our model can predict if a person makes over or under $50k with a 67% accuracy._
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+```
+
+
+```{python}
+#| label: Q4-Model
+#| code-summary: Random Forest Model
+#| fig-cap: "Classification Report"
+#| fig-align: center
+# Include and execute your code here
+
+X_pred = df_encoded.drop(columns=df_encoded.filter(regex=("(household_income|income_num|income_over_50k|location_\(census_region\)_East South Central|location_\(census_region\)_Middle Atlantic|location_\(census_region\)_Mountain|location_\(census_region\)_New England|location_\(census_region\)_Pacific|location_\(census_region\)_South Atlantic|location_\(census_region\)_West North Central|location_\(census_region\)_West South Central|respondentid)")).columns)
+y_pred = df_encoded['income_over_50k']
+
+X_train, X_test, y_train, y_test = train_test_split(X_pred, y_pred, test_size=0.35, random_state=76)
+
+rf = RandomForestClassifier(n_estimators=300 ,random_state=76, max_depth=20, min_samples_split=2)
+rf.fit(X_train, y_train)
+
+y_pred = rf.predict(X_test)
+
+print('Accuracy:', accuracy_score(y_test, y_pred))
+print('\nClassification Report:\n', classification_report(y_test, y_pred, target_names=['Under 50k', 'Over 50k']))
+```
+
+
+## STRETCH|TASK 5
+
+__Validate the data provided on GitHub lines up with the article by recreating a 3rd visual from the article.__
+
+_For this stretch challenge we were asked to recreate one more visual from the article to double check the validity of our data. I chose to recreate the “What’s the Best ‘Star Wars’ Movie?” In this visual we first had to filter the data further to those who have seen all the Star Wars movies. We then had to calculate and display the share of respondents who rated each fil as their favorite._
+
+```{python}
+#| label: Q5
+#| code-summary: Read and format data
+# Include and execute your code here
+import pandas as pd
+import numpy as np
+from lets_plot import *
+
+LetsPlot.setup_html(isolated_frame=True)
+
+```
+
+
+```{python}
+#| label: Q5-visual
+#| code-summary: What is the best Star Wars movie?
+#| tbl-cap: "Best Star Wars Movie"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+rank_columns = [
+    'rank_i__the_phantom_menace',
+    'rank_ii__attack_of_the_clones',
+    'rank_iii__revenge_of_the_sith',
+    'rank_iv__a_new_hope',
+    'rank_v_the_empire_strikes_back',
+    'rank_vi_return_of_the_jedi',
+]
+
+movie_titles = [
+    "The Phantom Menace",
+    "Attack of the Clones",
+    "Revenge of the Sith",
+    "A New Hope",
+    "The Empire Strikes Back",
+    "Return of the Jedi",
+]
+
+seen_all = df_filtered[seen_columns].all(axis=1)
+df_seen_all = df_filtered[seen_all]
+
+fav_counts = [df_seen_all[col].value_counts().get(1, 0) for col in rank_columns]
+
+total_resp = df_seen_all.shape[0]
+percent_fav = [(count / total_resp) * 100 for count in fav_counts]
+
+df_fav = pd.DataFrame({
+  'movie': movie_titles,
+  'percentage': percent_fav
+})
+df_fav['percent_label'] = df_fav['percentage'].round(0).astype(int).astype(str) + '%'
+df_fav['movie'] = pd.Categorical(df_fav['movie'], categories=movie_titles[::-1], ordered=True)
+
+p5 = (ggplot(df_fav, aes(x='movie', y='percentage')) + geom_bar(stat='identity', fill='blue') + geom_text(aes(label='percent_label'), nudge_y=2, size=10) + labs(title='Favorite Star Wars Movies', subtitle='Of respondents who have seen all six films', x='Percentage of Respondents', y='Star Wars Movies') + coord_flip() + theme(axis_text_x=element_text(hjust=1)))
+
+p5.show()
+```

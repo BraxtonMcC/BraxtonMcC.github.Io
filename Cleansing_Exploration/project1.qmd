@@ -1,7 +1,7 @@
 ---
-title: "Client Report - [Insert Project Title]"
+title: "Client Report - What's in a Name?"
 subtitle: "Course DS 250"
-author: "[STUDENT NAME]"
+author: "[Braxton McCandless]"
 format:
   html:
     self-contained: true
@@ -25,4 +25,246 @@ execute:
     
 ---
 
-### Paste in a template
+### What's in a Name?
+<!-- 
+<!-- highlight line 31 to the end and use ctrl + / (win) or command + / (mac) to uncomment out the code below, the same shortcut can be used to comment out code again. -->
+<!-- <!-- -->
+```{python}
+#| label: libraries
+#| include: false
+import pandas as pd
+import numpy as np
+import plotly.express as px
+from lets_plot import *
+from lets_plot.mapping import as_discrete
+
+LetsPlot.setup_html()
+```
+
+
+### Elevator pitch
+
+_In comparing baby names and birth years looking for trends, I have learned that my name "Braxton" was not all that popular when I was born. If you were to get a call from a "Brittney" on the phone, it would be safe to assume that her age would be 34 years old. I also analyzed the effect of certain events on popularity of names._
+
+
+```{python}
+#| label: project-data
+#| code-summary: Read and format project data
+# Include and execute your code here
+df = pd.read_csv("https://github.com/byuidatascience/data4names/raw/master/data-raw/names_year/names_year.csv")
+df 
+```
+
+
+### QUESTION|TASK 1
+
+__How does your name at your birth year compare to its use historically?__
+
+_Historicly it looks like my name was given after a slight rise in popularity. However, I was given my name before the largest spike after about 2002._
+
+
+```{python}
+#| label: Q1
+#| code-summary: Read and format data
+import pandas as pd
+import numpy as np
+from lets_plot import *
+from lets_plot.mapping import as_discrete 
+
+LetsPlot.setup_html()
+
+
+```
+
+```{python}
+#| label: Q1-chart
+#| code-summary: Plot of the name Braxton
+#| fig-cap: "The Use of Braxton"
+#| fig-align: center
+# Include and execute your code here
+my_name_df = df[df['name'] == 'Braxton']
+year_2000_data = my_name_df[my_name_df['year'] == 2000]
+
+(ggplot(my_name_df, aes(x='year', y='Total')) +
+    geom_point(color = 'blue') +
+    ggtitle('The Use of Braxton') +
+    xlab('Year') +
+    ylab('Total') +
+    scale_x_continuous(format='d') +
+    theme(plot_title=element_text(hjust=0.5)) +
+    geom_text(aes(x=year_2000_data['year'], y=year_2000_data['Total']), label='782', nudge_x=-0.5, nudge_y=400) +
+    geom_segment(aes(x=year_2000_data['year'], xend=year_2000_data['year'], y=year_2000_data['Total'] - 10, yend=year_2000_data['Total']+350), arrow=arrow(length=5, type='closed'), color='red')
+)
+```
+
+
+```{python}
+#| label: Q1-Data
+#| code-summary: table of the name Braxton
+#| tbl-cap: "Braxton's Name Usage"
+#| tbl-cap-location: top
+
+display(my_name_df)
+
+```
+
+
+### QUESTION|TASK 2
+
+__If you talked to someone named Brittany on the phone, what is your guess of his or her age? What ages would you not guess?__
+
+_It appears that the most popular year for the use of the name "Brittney" was 1990. This means that we could make a educated guess that a person named Britteny would be 34 years old._
+
+
+```{python}
+#| label: Q2
+#| code-summary: Read and format data
+
+import pandas as pd
+import numpy as np
+from lets_plot import *
+from lets_plot.mapping import as_discrete 
+
+LetsPlot.setup_html()
+
+
+```
+
+```{python}
+#| label: Q2-chart
+#| code-summary: Bar chart of the name Brittany
+#| fig-cap: "The Popularity of Brittney Over Time"
+#| fig-align: center
+
+brittany_df = df[df['name'] == 'Brittany']
+
+(ggplot(brittany_df, aes(x='year', y='Total')) +
+    geom_bar(stat='identity') +
+    ggtitle('The Popularity of Brittney Over Time') +
+    xlab('Year') +
+    ylab('Total') +
+    scale_x_continuous(format='d') +
+    theme(plot_title=element_text(hjust=0.5))
+)
+```
+
+
+```{python}
+#| label: Q2-Data
+#| code-summary: Table of the name Brittany
+#| tbl-cap: "Brittany's Name Usage"
+#| tbl-cap-location: top
+# Include and execute your code here
+
+display(brittany_df)
+
+```
+
+
+### QUESTION|TASK 3
+
+__Mary, Martha, Peter, and Paul are all Christian names. From 1920 - 2000, compare the name usage of each of the four names in a single chart. What trends do you notice?__
+
+_It seems to be that 'Mary' was the most common name for most of the early 1920's. Once we get to the 1970's however, all four names seem to take a steep decline and the doesn't climb back up. I am lead to assume that as the world became less religious, biblical names became less popular._
+
+
+```{python}
+#| label: Q3
+#| code-summary: Read and format data
+#| 
+import pandas as pd
+import numpy as np
+from lets_plot import *
+from lets_plot.mapping import as_discrete 
+
+LetsPlot.setup_html()
+
+
+
+```
+
+```{python}
+#| label: Q3-chart
+#| code-summary: Line chart of the names Mary, Martha, Peter, and Paul
+#| fig-cap: "Mary, Martha, Peter, and Paul Over Time"
+#| fig-align: center
+
+new_names_df = df[df['name'].isin(['Mary', 'Martha', 'Peter', 'Paul']) & (df['year'] >= 1920) & (df['year'] <= 2000)]
+
+(ggplot (new_names_df, aes(x='year', y='Total', color='name')) +
+geom_line() + 
+    ggtitle('Mary, Martha, Peter, and Paul Over Time') + xlab('Year') + ylab('Total') + 
+    scale_x_continuous(format='d') + 
+    theme(plot_title=element_text(hjust=0.5))
+)
+```
+
+
+```{python}
+#| label: Q3-Data
+#| code-summary: Mary, Martha, Peter, and Paul table
+#| tbl-cap: "Mary, Martha, Peter, and Paul Over Time"
+#| tbl-cap-location: top
+
+
+display(new_names_df)
+
+``` 
+
+
+### QUESTION|TASK 4
+
+__Think of a unique name from a famous movie. Plot the usage of that name and see how changes line up with the movie release. Does it look like the movie had an effect on usage?__
+
+_Looking at the graph it looks as though there was a little rise in the use of the name after 1993. The rise after 1993 is slight and would be hard to conclude that the increase is correlated with the release of "The Sandlot"._
+
+
+```{python}
+#| label: Q4
+#| code-summary: Read and format data
+#| 
+import pandas as pd
+import numpy as np
+from lets_plot import *
+from lets_plot.mapping import as_discrete 
+
+LetsPlot.setup_html()
+
+
+
+```
+
+```{python}
+#| label: Q4-chart
+#| code-summary: Line chart of the name Benjamin
+#| fig-cap: "Benjamin from The Sandlot"
+#| fig-align: center
+
+benjamin_df = df[df['name'] == 'Benjamin']
+
+(ggplot(benjamin_df, aes(x='year', y='Total')) +
+    geom_line(color = 'blue') +
+    geom_vline(xintercept = 1993, linetype = 'dashed', color = 'red') +
+    geom_text(x = 1992, y = 15000, label = 'Sandlot was Released', hjust = 1) +
+    geom_text(x = 1960, y = 14200, label = '(1993)', hjust = 0) +
+    ggtitle('Benjamin from The Sandlot') +
+    xlab('Year') +
+    ylab('Total') +
+    scale_x_continuous(format='d') +
+    theme(plot_title=element_text(hjust=0.5))
+)
+
+```
+
+
+```{python}
+#| label: Q4-Data
+#| code-summary: Benjamin from The Sandlot table
+#| tbl-cap: "Benjamin from The Sandlot"
+#| tbl-cap-location: top
+
+display(benjamin_df)
+
+``` 
+
+--> -->
