@@ -2,7 +2,7 @@
   {
     "objectID": "competition.html",
     "href": "competition.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
@@ -124,7 +124,7 @@
   {
     "objectID": "story_telling.html",
     "href": "story_telling.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
@@ -144,7 +144,7 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics"
   },
@@ -180,7 +180,7 @@
   {
     "objectID": "cleansing.html",
     "href": "cleansing.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
@@ -200,7 +200,7 @@
   {
     "objectID": "exploration.html",
     "href": "exploration.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
@@ -454,7 +454,7 @@
   {
     "objectID": "full_stack.html",
     "href": "full_stack.html",
-    "title": "about me",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
@@ -465,6 +465,77 @@
     "objectID": "full_stack.html#title-2-header",
     "href": "full_stack.html#title-2-header",
     "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Full Stack"
+    ]
+  },
+  {
+    "objectID": "ds250_coding_challenge.html",
+    "href": "ds250_coding_challenge.html",
+    "title": "Coding Challenge",
+    "section": "",
+    "text": "Show the code\n# Read in libraries\nimport pandas as pd\nimport numpy as np\nfrom lets_plot import *\nShow the code\n# Read in the names data\nurl = \"https://github.com/byuidatascience/data4names/raw/master/data-raw/names_year/names_year.csv\"\nnames = pd.read_csv(url)"
+  },
+  {
+    "objectID": "ds250_coding_challenge.html#question-1",
+    "href": "ds250_coding_challenge.html#question-1",
+    "title": "Coding Challenge",
+    "section": "Question 1:",
+    "text": "Question 1:\n\n[Replace with the text from question #]\n\n\nShow the code\n# Question # Code\n\n\nWhen done with a question, render it to a .html file and upload it for the question. Either re-downolad this template or file -&gt; save as -&gt; a new file name and then replace the text in the question with the new question text."
+  },
+  {
+    "objectID": "competition.html#my-data-science-portfolio",
+    "href": "competition.html#my-data-science-portfolio",
+    "title": "About Me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Competition"
+    ]
+  },
+  {
+    "objectID": "story_telling.html#my-data-science-portfolio",
+    "href": "story_telling.html#my-data-science-portfolio",
+    "title": "About Me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Story Telling"
+    ]
+  },
+  {
+    "objectID": "cleansing.html#my-data-science-portfolio",
+    "href": "cleansing.html#my-data-science-portfolio",
+    "title": "About Me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Data Cleansing"
+    ]
+  },
+  {
+    "objectID": "exploration.html#my-data-science-portfolio",
+    "href": "exploration.html#my-data-science-portfolio",
+    "title": "About Me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Data Exploration"
+    ]
+  },
+  {
+    "objectID": "index.html#my-data-science-portfolio",
+    "href": "index.html#my-data-science-portfolio",
+    "title": "About Me",
+    "section": "",
+    "text": "MarkDown Basics"
+  },
+  {
+    "objectID": "full_stack.html#my-data-science-portfolio",
+    "href": "full_stack.html#my-data-science-portfolio",
+    "title": "About Me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
